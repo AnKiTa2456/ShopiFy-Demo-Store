@@ -139,7 +139,9 @@ export default function App() {
     })
   }
 
-  const handleDeleteProduct = id => setProducts(prev => prev.filter(p => p.id !== id))
+  const handleDeleteProduct  = id => setProducts(prev => prev.filter(p => p.id !== id))
+  const handleAddProduct     = product => setProducts(prev => [product, ...prev])
+  const handleUpdateProducts = updated => setProducts(updated)
 
   const handleAddToCart = ({ product, variant }) => {
     setCart(prev => {
@@ -275,6 +277,8 @@ export default function App() {
             products={products}
             onImport={handleImport}
             onDeleteProduct={handleDeleteProduct}
+            onAddProduct={handleAddProduct}
+            onUpdateProducts={handleUpdateProducts}
           />
         )}
       </main>

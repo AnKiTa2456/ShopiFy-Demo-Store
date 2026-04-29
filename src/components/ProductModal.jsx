@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useBreakpoint } from '../hooks/useBreakpoint'
 
 const s = {
   overlay: {
@@ -48,6 +49,7 @@ const s = {
 }
 
 export default function ProductModal({ product, onClose, onAddToCart }) {
+  const { isMobile } = useBreakpoint()
   const [selectedSize, setSelectedSize] = useState(null)
   const [selectedColor, setSelectedColor] = useState(null)
   const [added, setAdded] = useState(false)
@@ -82,17 +84,17 @@ export default function ProductModal({ product, onClose, onAddToCart }) {
   }
 
   return (
-    <div style={s.overlay} onClick={onClose}>
-      <div style={{ ...s.modal, position: 'relative' }} onClick={e => e.stopPropagation()}>
+    <div style={{ ...s.overlay, padding: isMobile ? '0' : '16px', alignItems: isMobile ? 'flex-end' : 'center' }} onClick={onClose}>
+      <div style={{ ...s.modal, position: 'relative', borderRadius: isMobile ? '16px 16px 0 0' : '12px', maxHeight: isMobile ? '92vh' : '90vh' }} onClick={e => e.stopPropagation()}>
         <button style={s.closeBtn} onClick={onClose}>×</button>
-        <div style={s.body}>
-          <div style={s.imgWrap}>
+        <div style={{ ...s.body, flexDirection: isMobile ? 'column' : 'row' }}>
+          <div style={{ ...s.imgWrap, width: isMobile ? '100%' : '45%', maxHeight: isMobile ? '240px' : 'none' }}>
             {product.image
               ? <img src={product.image} alt={product.title} style={s.img} />
               : <div style={{ ...s.img, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '40px' }}>👗</div>
             }
           </div>
-          <div style={s.info}>
+          <div style={{ ...s.info, padding: isMobile ? '20px' : '32px' }}>
             <div>
               {product.tags.map(tag => <span key={tag} style={s.tag}>{tag}</span>)}
               <span style={{ ...s.tag, marginLeft: '6px' }}>{product.vendor}</span>

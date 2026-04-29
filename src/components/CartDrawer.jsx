@@ -5,7 +5,7 @@ const s = {
   },
   drawer: {
     position: 'fixed', top: 0, right: 0, bottom: 0,
-    width: '380px', maxWidth: '100vw',
+    width: 'min(380px, 100vw)', maxWidth: '100vw',
     background: '#fff', zIndex: 801, display: 'flex', flexDirection: 'column',
     boxShadow: '-4px 0 20px rgba(0,0,0,0.15)',
   },

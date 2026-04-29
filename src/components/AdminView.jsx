@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from 'react'
 import ImportModal from './ImportModal'
 import AddProductModal from './AddProductModal'
 import { generateCSVFromProducts } from '../utils/csvParser'
+import { useBreakpoint } from '../hooks/useBreakpoint'
 
 const s = {
   page: { flex: 1, display: 'flex', flexDirection: 'column', overflow: 'hidden' },
@@ -122,6 +123,7 @@ function MoreActionsMenu({ selected, onArchive, onDelete, onDuplicate, disabled 
 }
 
 export default function AdminView({ products, onImport, onDeleteProduct, onAddProduct, onUpdateProducts }) {
+  const { isMobile } = useBreakpoint()
   const [importOpen, setImportOpen]   = useState(false)
   const [addOpen, setAddOpen]         = useState(false)
   const [search, setSearch]           = useState('')
@@ -189,23 +191,25 @@ export default function AdminView({ products, onImport, onDeleteProduct, onAddPr
     <div style={s.page}>
 
       {/* ── Top bar ── */}
-      <div style={s.topBar}>
-        <h1 style={s.topTitle}>Products</h1>
-        <button style={s.btn} onClick={handleExport}>Export</button>
+      <div style={{ ...s.topBar, height: 'auto', padding: isMobile ? '10px 14px' : '0 20px', flexWrap: 'wrap', gap: isMobile ? '8px' : '8px', minHeight: '56px' }}>
+        <h1 style={{ ...s.topTitle, fontSize: isMobile ? '16px' : '20px' }}>Products</h1>
+        {!isMobile && <button style={s.btn} onClick={handleExport}>Export</button>}
         <button style={s.btn} onClick={() => setImportOpen(true)}>Import</button>
-        <MoreActionsMenu
-          selected={selected.size}
-          onArchive={handleArchiveSelected}
-          onDelete={handleDeleteSelected}
-          onDuplicate={handleDuplicateSelected}
-        />
+        {!isMobile && (
+          <MoreActionsMenu
+            selected={selected.size}
+            onArchive={handleArchiveSelected}
+            onDelete={handleDeleteSelected}
+            onDuplicate={handleDuplicateSelected}
+          />
+        )}
         <button style={s.btnPrimary} onClick={() => setAddOpen(true)}>
-          + Add product
+          {isMobile ? '+ Add' : '+ Add product'}
         </button>
       </div>
 
       {/* ── Stats ── */}
-      <div style={s.statsRow}>
+      <div style={{ ...s.statsRow, display: isMobile ? 'none' : 'flex' }}>
         <div style={s.statCard}>
           <p style={s.statLabel}>Products by sell-through rate</p>
           <p style={s.statValue}>{((products.filter(p => p.status === 'active').length / Math.max(products.length, 1)) * 100).toFixed(0)}%</p>
@@ -276,7 +280,7 @@ export default function AdminView({ products, onImport, onDeleteProduct, onAddPr
             </div>
           )}
 
-          {/* Table */}
+          {/* Table / Mobile cards */}
           {paginated.length === 0 ? (
             <div style={s.emptyState}>
               <p style={{ fontSize: '32px', marginBottom: '12px' }}>📦</p>
@@ -284,7 +288,39 @@ export default function AdminView({ products, onImport, onDeleteProduct, onAddPr
               <p style={{ fontSize: '13px', marginBottom: '16px' }}>Try adjusting your search or filters</p>
               <button style={s.btnPrimary} onClick={() => setAddOpen(true)}>+ Add product</button>
             </div>
+          ) : isMobile ? (
+            /* Mobile card list */
+            <div>
+              {paginated.map(product => {
+                const inv = product.variants.reduce((s, v) => s + (v.inventory || 0), 0)
+                const isSelected = selected.has(product.id)
+                return (
+                  <div key={product.id} style={{ display: 'flex', gap: '10px', padding: '12px 14px', borderBottom: '1px solid #f1f1f1', background: isSelected ? '#f0faf6' : '#fff', alignItems: 'center' }}>
+                    <input type="checkbox" style={s.checkbox} checked={isSelected} onChange={() => toggleOne(product.id)} />
+                    {product.image
+                      ? <img src={product.image} alt={product.title} style={{ ...s.productImg, width: '48px', height: '48px' }} loading="lazy" />
+                      : <div style={{ ...s.productImgPlaceholder, width: '48px', height: '48px' }}>👗</div>
+                    }
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontWeight: '600', fontSize: '13px', marginBottom: '3px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{product.title}</p>
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                        <span style={{ ...s.badge, ...statusStyle(product.status), fontSize: '11px', padding: '1px 7px' }}>
+                          <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: 'currentColor', display: 'inline-block' }} />
+                          {product.status}
+                        </span>
+                        <span style={{ fontSize: '12px', color: inv === 0 ? '#d72c0d' : '#6d7175' }}>
+                          {inv === 0 ? 'Out of stock' : `${inv} in stock`}
+                        </span>
+                      </div>
+                    </div>
+                    <p style={{ fontWeight: '700', fontSize: '14px', flexShrink: 0 }}>${product.price.toFixed(2)}</p>
+                  </div>
+                )
+              })}
+            </div>
           ) : (
+            /* Desktop table — horizontally scrollable */
+            <div style={{ overflowX: 'auto' }}>
             <table style={s.table}>
               <thead>
                 <tr>
@@ -351,6 +387,7 @@ export default function AdminView({ products, onImport, onDeleteProduct, onAddPr
                 })}
               </tbody>
             </table>
+            </div>
           )}
 
           {/* Pagination */}
